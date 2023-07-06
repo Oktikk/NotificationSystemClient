@@ -1,15 +1,16 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { AngularFireMessaging } from '@angular/fire/compat/messaging';
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
+import { environment } from "../environments/environment";
 
 @Injectable({
   providedIn: 'root'
 })
 export class MessagingService {
 
-  currentMessage = new BehaviorSubject<any>(null);
+  message: any;
 
-  constructor(private angularFireMessaging:AngularFireMessaging) { }
+  constructor() { }
 
   requestPermission(){
     if ("serviceWorker" in navigator) {
@@ -17,11 +18,21 @@ export class MessagingService {
         .register("./firebase-messaging-sw.js")
         .then((registration) => {
           console.log("Service worker registered:", registration);
-          this.angularFireMessaging.requestToken.subscribe((token) =>{
-            console.log(token);
-          },(err)=>{
-            console.log("TUTAJ JEST BŁĄD: ", err);
-          })
+          const messaging = getMessaging();
+          getToken(messaging, 
+          { vapidKey: environment.firebase.vapidKey}).then(
+            (currentToken) => {
+            if (currentToken) {
+              console.log("Got token: ");
+              console.log(currentToken);
+            } else {
+              console.log('No registration token available. Request permission to generate one.');
+              }  
+          }).catch((err) => {
+            console.log('An error occurred while retrieving token. ', err);
+          });
+
+
         })
         .catch((error) => {
           console.error("Service worker registration failed:", error);
@@ -30,9 +41,10 @@ export class MessagingService {
   }
 
   receiveMessaging(){
-    this.angularFireMessaging.messages.subscribe((payload)=>{
-      console.log("New message", payload);
-      this.currentMessage.next(payload);
-    })
+    const messaging = getMessaging();
+    onMessage(messaging, (payload) => {
+      console.log('Message received. ', payload);
+      this.message=payload;
+    });
   }
 }
