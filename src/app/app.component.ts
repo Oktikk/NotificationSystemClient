@@ -1,7 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { HttpService } from './http.service';
-import { v4 as uuid} from 'uuid';
-import { MessagingService } from './messaging.service';
 
 
 
@@ -12,30 +10,38 @@ import { MessagingService } from './messaging.service';
 })
 export class AppComponent {
   title = 'NotificationSystemClient';
-  message: any;
-  clients : any;
-  constructor(private httpService : HttpService, private messagingService : MessagingService) {
+  notifications : any[] = [];
+  constructor(private httpService : HttpService, private changeDetection : ChangeDetectorRef) {
   }
 
   ngOnInit(){
-    const guid = uuid();
-    this.httpService.connect(guid).subscribe({
+    window.ipcRenderer.on('get-fcm-token', (event, token) =>{
+      this.sendTokenToDatabase(token);
+    })
+    window.ipcRenderer.on('notification-recieved', (event, notification) =>{
+      this.notifications.push(notification);
+      this.changeDetection.detectChanges();
+    })
+  }
+
+  sendTokenToDatabase(token : string){
+    this.httpService.connect(token).subscribe({
       next: (v) => {
         this.changeTrayIcon(true);
-        console.log(guid)
       },
       error: (e) => {
         this.changeTrayIcon(false);
         console.log(e)
       }
     });
-
-
-    this.messagingService.requestPermission();
-    this.messagingService.receiveMessaging();
   }
 
   changeTrayIcon(success : boolean){
     window.ipcRenderer.send('change-tray-icon', success);
+  }
+
+  deleteNotification(event, index){
+    this.notifications.splice(index, 1);
+    this.changeDetection.detectChanges();
   }
 }

@@ -3,12 +3,6 @@ import { BrowserModule } from '@angular/platform-browser';
 import { HttpClientModule } from '@angular/common/http';
 
 import { AppComponent } from './app.component';
-import { ElectronService } from 'ngx-electron';
-
-import { environment } from "../environments/environment";
-import { initializeApp } from "firebase/app";
-
-initializeApp(environment.firebase);
 
 
 
@@ -20,7 +14,7 @@ initializeApp(environment.firebase);
     BrowserModule,
     HttpClientModule,
   ],
-  providers: [ElectronService],
+  providers: [],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

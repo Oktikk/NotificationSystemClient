@@ -23,7 +23,7 @@
       "dom"
     ],
     "typeRoots": ["./node_modules/@types", "./src/types"],
-    "allowJs": true
+    "noImplicitAny": false
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

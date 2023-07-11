@@ -10,12 +10,8 @@ export class HttpService {
 
   constructor(private http : HttpClient) { }
 
-  getClients(){
-    return this.http.get(this.url);
-  }
-
-  connect(guid : string){
-    const data = { guid: guid };
+  connect(token : string){
+    const data = { FCMToken: token };
     
     return this.http.post(this.url, data);
   }

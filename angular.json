@@ -23,8 +23,7 @@
             "assets": [
               "src/favicon.ico",
               "src/assets",
-              "src/firebase-messaging-sw.js",
-              "src/manifest.json"
+              "src/renderer.js"
             ],
             "styles": [
               "src/styles.css"
@@ -93,9 +92,7 @@
             "tsConfig": "tsconfig.spec.json",
             "assets": [
               "src/favicon.ico",
-              "src/assets",
-              "src/firebase-messaging-sw.js",
-              "src/manifest.json"
+              "src/assets"
             ],
             "styles": [
               "src/styles.css"

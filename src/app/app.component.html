@@ -1,7 +1,11 @@
-<div *ngIf="message;">
-  <h1>{{ message.notification.title }}</h1>
-  <h2>{{ message.notification.body }}</h2>
-</div>
-<div *ngIf="!message;">
-  No Message Arrived
-</div>
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+  </head>
+<body>
+    <h1>NOTIFICATIONS</h1>
+    <div *ngFor="let n of notifications; let i=index" class="notification">
+        <button (click)="deleteNotification($event, i)"></button>
+        <div class="title">{{n.title}}</div>
+        <div class="body">{{n.body}}</div>
+    </div>
+</body>

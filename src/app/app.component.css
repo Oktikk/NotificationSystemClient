@@ -1,0 +1,70 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background-color: #f5f5f5;
+    font-family: 'Roboto', sans-serif;
+}
+
+h1 {
+    font-family: 'Roboto', sans-serif;
+}
+
+.notification {
+    width: 20rem;
+    border-radius: 10px;
+    padding: 0.7rem 1rem;
+    margin-bottom: 1rem;
+    background-color: #ffffff;
+    box-shadow: 0px 0px 30px -15px rgba(66, 68, 90, 1);
+    overflow-wrap: break-word;
+}
+
+.title {
+    font-size: 18px;
+    font-weight: bold;
+    padding-top: 5px;
+}
+
+.body {
+    font-size: 14px;
+    padding: 5px 25px 0 0;
+    text-align: justify;
+}
+
+button {
+    top: -5px;
+    right: -10px;
+    float: right;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    border: 2px solid red;
+    background-color: red;
+    position: relative;
+}
+
+button::before {
+    content: " ";
+    position: absolute;
+    display: block;
+    background-color: white;
+    width: 2px;
+    left: 7px;
+    top: 2px;
+    bottom: 2px;
+    transform: rotate(45deg);
+}
+
+button::after {
+    content: " ";
+    position: absolute;
+    display: block;
+    background-color: white;
+    height: 2px;
+    top: 7px;
+    left: 2px;
+    right: 2px;
+    transform: rotate(45deg);
+}

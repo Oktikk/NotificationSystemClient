@@ -6,8 +6,3 @@ declare global {
     ipcMain: any;
   }
 }
-
-declare module 'firebase' {
-  const value: any;
-  export default value;
-}

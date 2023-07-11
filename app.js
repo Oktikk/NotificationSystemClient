@@ -1,5 +1,7 @@
 const { app, Menu, Tray, BrowserWindow } = require('electron')
 const { ipcMain, ipcRenderer } = require('electron')
+const { setup: setupPushReceiver } = require('electron-push-receiver')
+
 const path = require('path')
 
 const log = require('electron-log');
@@ -12,62 +14,105 @@ console.log = log.log;
 console.error = log.error;
 
 let tray = null
+let isQuiting = false;
+
 app.whenReady().then(() => {
   const iconPath = path.join(__dirname, 'src/images/false.png');
   tray = new Tray(iconPath)
   tray.setToolTip('Connecting to server...')
+
+  var contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Open window',
+      click: _ => {
+        mainWindow.show();
+      }
+    },
+    {
+      label: 'Quit',
+      click: _ => {
+        isQuiting = true;
+        app.quit()
+      }
+    }
+  ])
+
+  tray.setContextMenu(contextMenu);
+
+  tray.on('click', event => {
+    mainWindow.show();
+  })
+})
+
+
+ipcMain.on('send-fcm-token', (event, token) => {
+  event.reply('get-fcm-token', token);
+})
+
+ipcMain.on('got-notification', (event, notification) => {
+  event.reply('notification-recieved', notification);
 })
 
 ipcMain.on('change-tray-icon', (event, success) => {
-    console.log(success);
-    if(success){
-        iconPath = path.join(__dirname, 'src/images/true.png');
-        tray.setToolTip("Connected to server!");
-    }
-    else {
-        iconPath = path.join(__dirname, 'src/images/false.png');
-        tray.setToolTip("Not connected to server!");
-    }
-    if (tray) {
-        tray.setImage(iconPath);
-    }
+  if (success) {
+    iconPath = path.join(__dirname, 'src/images/true.png');
+    tray.setToolTip("Connected to server!");
+  }
+  else {
+    iconPath = path.join(__dirname, 'src/images/false.png');
+    tray.setToolTip("Not connected to server!");
+  }
+  if (tray) {
+    tray.setImage(iconPath);
+  }
 });
 
-    const url = require("url");
+const url = require("url");
 
-    let mainWindow
+let mainWindow
 
-    function createWindow () {
-      mainWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
-        webPreferences: {
-          nodeIntegration: true,
-          contextIsolation: false,
-          preload: path.join(__dirname, 'preload.js')
-        }
-      })
+function createWindow() {
+  mainWindow = new BrowserWindow({
+    width: 400,
+    height: 600,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      preload: path.join(__dirname, 'preload.js'),
+    },
+    show: false,
+  })
 
-      mainWindow.loadURL(
-        url.format({
-          pathname: path.join(__dirname, `/dist/notification-system-client/index.html`),
-          protocol: "file:",
-          slashes: true
-        })
-      );
-      mainWindow.webContents.openDevTools()
+  mainWindow.setBackgroundColor('#f5f5f5');
 
-      mainWindow.on('closed', function () {
-        mainWindow = null
-      })
+  mainWindow.loadURL(
+    url.format({
+      pathname: path.join(__dirname, `/dist/notification-system-client/index.html`),
+      protocol: "file:",
+      slashes: true
+    })
+  );
+
+  setupPushReceiver(mainWindow.webContents);
+
+  mainWindow.on('close', function(event){
+    if(!isQuiting){
+      event.preventDefault();
+      mainWindow.hide();
     }
+  })
+}
 
-    app.on('ready', createWindow)
+app.on('ready', createWindow)
 
-    app.on('window-all-closed', function () {
-      if (process.platform !== 'darwin') app.quit()
-    })
+app.on('before-quit', function(){
+  tray.destroy();
+})
 
-    app.on('activate', function () {
-      if (mainWindow === null) createWindow()
-    })
+app.on('window-all-closed', function () {
+  if (process.platform !== 'darwin') app.quit()
+})
+
+app.on('activate', function () {
+  if (mainWindow === null) createWindow()
+})
