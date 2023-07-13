@@ -10,15 +10,18 @@ import { HttpService } from './http.service';
 })
 export class AppComponent {
   title = 'NotificationSystemClient';
-  notifications : any[] = [];
+  notifications : Notification[] = [];
+
   constructor(private httpService : HttpService, private changeDetection : ChangeDetectorRef) {
   }
 
   ngOnInit(){
-    window.ipcRenderer.on('get-fcm-token', (event, token) =>{
+    window.ipcRenderer.on('token-send', (event, token) =>{
       this.sendTokenToDatabase(token);
     })
-    window.ipcRenderer.on('notification-recieved', (event, notification) =>{
+
+    window.ipcRenderer.on('notification-received', (event, title, body) =>{
+      const notification = new Notification(title, body);
       this.notifications.push(notification);
       this.changeDetection.detectChanges();
     })
@@ -26,7 +29,7 @@ export class AppComponent {
 
   sendTokenToDatabase(token : string){
     this.httpService.connect(token).subscribe({
-      next: (v) => {
+      next: () => {
         this.changeTrayIcon(true);
       },
       error: (e) => {
@@ -43,5 +46,15 @@ export class AppComponent {
   deleteNotification(event, index){
     this.notifications.splice(index, 1);
     this.changeDetection.detectChanges();
+  }
+}
+
+export class Notification{
+  title : string = '';
+  body : string = '';
+
+  constructor(title : string, body : string){
+    this.title = title;
+    this.body = body;
   }
 }

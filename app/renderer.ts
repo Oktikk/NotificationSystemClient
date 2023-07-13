@@ -1,15 +1,15 @@
-const { ipcRenderer } = require('electron')
-const {
+import { ipcRenderer } from 'electron';
+import {
   START_NOTIFICATION_SERVICE,
   NOTIFICATION_SERVICE_STARTED,
   NOTIFICATION_SERVICE_ERROR,
   NOTIFICATION_RECEIVED,
   TOKEN_UPDATED,
-} = require('electron-push-receiver/src/constants')
+} from 'electron-push-receiver/src/constants';
 
 ipcRenderer.on(NOTIFICATION_SERVICE_STARTED, (_, token) => {
   console.log('service successfully started', token);
-  ipcRenderer.send('send-fcm-token', token);
+  ipcRenderer.send('token-received', token);
 })
 
 ipcRenderer.on(NOTIFICATION_SERVICE_ERROR, (_, error) => {
@@ -22,16 +22,11 @@ ipcRenderer.on(TOKEN_UPDATED, (_, token) => {
 
 ipcRenderer.on(NOTIFICATION_RECEIVED, (_, serverNotificationPayload) => {
   if (serverNotificationPayload.notification.body) {
-    let notification = new Notification(serverNotificationPayload.notification.title, {
+    const notification = new Notification(serverNotificationPayload.notification.title, {
       body: serverNotificationPayload.notification.body
     })
 
-    let notif = {
-      title: notification.title,
-      body: notification.body
-    }
-
-    ipcRenderer.send('got-notification', notif);
+    ipcRenderer.send('got-notification', notification.title, notification.body);
 
     notification.onclick = () => {
       console.log('Notification clicked')
