@@ -1,18 +1,17 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from  '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root',
 })
 export class HttpService {
+    private url = 'https://localhost:7029/api/Connect';
 
-  private url = 'https://localhost:7029/api/Connect';
+    constructor(private http: HttpClient) {}
 
-  constructor(private http : HttpClient) { }
+    connect(token: string) {
+        const data = { FCMToken: token };
 
-  connect(token : string){
-    const data = { FCMToken: token };
-    
-    return this.http.post(this.url, data);
-  }
+        return this.http.post(this.url, data);
+    }
 }
