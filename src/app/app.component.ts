@@ -25,6 +25,9 @@ export class AppComponent {
             this.notifications.push(notification);
             this.changeDetection.detectChanges();
         });
+        window.ipcRenderer.on('console-log-sent', (event, message) => {
+            console.log(message);
+        });
     }
 
     sendTokenToDatabase(token: string) {
