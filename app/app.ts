@@ -1,6 +1,12 @@
-import { app, Menu, Tray, BrowserWindow, ipcMain, dialog } from 'electron';
-
-import { autoUpdater } from 'electron-updater';
+import {
+    app,
+    Menu,
+    Tray,
+    BrowserWindow,
+    ipcMain,
+    dialog,
+    autoUpdater,
+} from 'electron';
 
 import { setup as setupPushReceiver } from 'electron-push-receiver';
 
@@ -121,15 +127,21 @@ function createWindow() {
         }
     });
 
+    mainWindow.on('closed', () => {
+        mainWindow = null;
+    });
+
     mainWindow.once('ready-to-show', () => {
-        autoUpdater.checkForUpdatesAndNotify();
+        initUpdate();
     });
 }
 
-app.on('ready', createWindow);
+app.once('ready', createWindow);
 
 app.on('before-quit', function () {
+    isQuiting = true;
     tray.destroy();
+    mainWindow.destroy();
 });
 
 app.on('window-all-closed', function () {
@@ -175,48 +187,59 @@ function handleStartupEvent() {
             app.quit();
 
             return true;
+        case '--squirrel-obsolete':
+            app.quit();
+            return true;
     }
     return;
 }
 
 handleStartupEvent();
 
-autoUpdater.on('update-available', () => {
-    const options: Electron.MessageBoxOptions = {
-        type: 'info',
-        buttons: [],
-        title: 'Aktualizacja',
-        message: 'Dostępna nowa aktualizacja. Rozpoczynam pobieranie...',
-    };
+function initUpdate() {
+    const url =
+        'https://github.com/Oktikk/NotificationSystemClient/releases/latest/download/';
 
-    dialog.showMessageBox(mainWindow, options).then((response) => {
-        if (response.response === 0) {
-            autoUpdater.quitAndInstall();
-        } else {
-            autoUpdater.autoInstallOnAppQuit = true;
-        }
+    autoUpdater.setFeedURL({ url });
+
+    autoUpdater.on('update-available', () => {
+        mainWindow.webContents.send('console-log-sent', 'available');
+        const options: Electron.MessageBoxOptions = {
+            type: 'info',
+            buttons: [],
+            title: 'Aktualizacja',
+            message: 'Dostępna nowa aktualizacja. Rozpoczynam pobieranie...',
+        };
+
+        dialog.showMessageBox(mainWindow, options);
     });
-});
 
-autoUpdater.on('update-downloaded', () => {
-    const options: Electron.MessageBoxOptions = {
-        type: 'question',
-        buttons: ['Tak', 'Nie'],
-        defaultId: 0,
-        title: 'Aktualizacja',
-        message: 'Pobrano aktualizację aplikacji. Czy zainstalować ją teraz?',
-    };
+    autoUpdater.on('update-downloaded', () => {
+        mainWindow.webContents.send('console-log-sent', 'downloaded');
+        const options: Electron.MessageBoxOptions = {
+            type: 'info',
+            buttons: [],
+            title: 'Aktualizacja',
+            message:
+                'Pobrano aktualizację aplikacji. Rozpoczynam instalację...',
+        };
 
-    dialog.showMessageBox(mainWindow, options).then((response) => {
-        if (response.response === 0) {
-            test();
+        dialog.showMessageBox(mainWindow, options).then(() => {
             autoUpdater.quitAndInstall();
-        } else {
-            autoUpdater.autoInstallOnAppQuit = true;
-        }
+        });
     });
-});
 
-function test() {
-    console.log('useless function');
+    autoUpdater.on('checking-for-update', () => {
+        mainWindow.webContents.send('console-log-sent', 'checking for update');
+    });
+
+    autoUpdater.on('update-not-available', () => {
+        mainWindow.webContents.send('console-log-sent', 'update not available');
+    });
+
+    autoUpdater.on('error', (error) => {
+        mainWindow.webContents.send('console-log-sent', error);
+    });
+
+    autoUpdater.checkForUpdates();
 }
