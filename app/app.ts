@@ -151,7 +151,7 @@ function handleStartupEvent() {
         return false;
     }
 
-    let squirrelCommand = process.argv[1];
+    const squirrelCommand = process.argv[1];
     switch (squirrelCommand) {
         case '--squirrel-install':
             app.setLoginItemSettings({
