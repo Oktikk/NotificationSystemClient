@@ -1,4 +1,6 @@
-import { app, Menu, Tray, BrowserWindow, ipcMain } from 'electron';
+import { app, Menu, Tray, BrowserWindow, ipcMain, dialog } from 'electron';
+
+import { autoUpdater } from 'electron-updater';
 
 import { setup as setupPushReceiver } from 'electron-push-receiver';
 
@@ -6,6 +8,8 @@ import * as path from 'path';
 
 let tray: Tray;
 let isQuiting = false;
+
+app.setAppUserModelId('Notification System Client');
 
 app.whenReady().then(() => {
     const iconPath = path.join(
@@ -116,6 +120,10 @@ function createWindow() {
             mainWindow.hide();
         }
     });
+
+    mainWindow.once('ready-to-show', () => {
+        autoUpdater.checkForUpdatesAndNotify();
+    });
 }
 
 app.on('ready', createWindow);
@@ -131,3 +139,84 @@ app.on('window-all-closed', function () {
 app.on('activate', function () {
     if (mainWindow === null) createWindow();
 });
+
+//Creating autostart and handling squirrel events
+
+const appFolder = path.dirname(process.execPath);
+const updateExe = path.resolve(appFolder, '..', 'Update.exe');
+const exeName = path.basename(process.execPath);
+
+function handleStartupEvent() {
+    if (process.platform !== 'win32') {
+        return false;
+    }
+
+    const squirrelCommand = process.argv[1];
+    switch (squirrelCommand) {
+        case '--squirrel-install':
+            app.setLoginItemSettings({
+                openAtLogin: true,
+                path: updateExe,
+                args: [
+                    '--processStart',
+                    `"${exeName}"`,
+                    '--process-start-args',
+                    '"--hidden"',
+                ],
+            });
+            app.quit();
+
+            return true;
+        case '--squirrel-uninstall':
+            app.setLoginItemSettings({
+                openAtLogin: false,
+                args: [],
+            });
+            app.quit();
+
+            return true;
+    }
+    return;
+}
+
+handleStartupEvent();
+
+autoUpdater.on('update-available', () => {
+    const options: Electron.MessageBoxOptions = {
+        type: 'info',
+        buttons: [],
+        title: 'Aktualizacja',
+        message: 'Dostępna nowa aktualizacja. Rozpoczynam pobieranie...',
+    };
+
+    dialog.showMessageBox(mainWindow, options).then((response) => {
+        if (response.response === 0) {
+            autoUpdater.quitAndInstall();
+        } else {
+            autoUpdater.autoInstallOnAppQuit = true;
+        }
+    });
+});
+
+autoUpdater.on('update-downloaded', () => {
+    const options: Electron.MessageBoxOptions = {
+        type: 'question',
+        buttons: ['Tak', 'Nie'],
+        defaultId: 0,
+        title: 'Aktualizacja',
+        message: 'Pobrano aktualizację aplikacji. Czy zainstalować ją teraz?',
+    };
+
+    dialog.showMessageBox(mainWindow, options).then((response) => {
+        if (response.response === 0) {
+            test();
+            autoUpdater.quitAndInstall();
+        } else {
+            autoUpdater.autoInstallOnAppQuit = true;
+        }
+    });
+});
+
+function test() {
+    console.log('useless function');
+}

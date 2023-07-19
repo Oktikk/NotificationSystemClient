@@ -34,6 +34,9 @@ export class AppComponent {
             },
             error: (e) => {
                 this.changeTrayIcon(false);
+                setTimeout(() => {
+                    this.sendTokenToDatabase(token);
+                }, 30000);
                 console.log(e);
             },
         });

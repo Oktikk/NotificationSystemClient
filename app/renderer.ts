@@ -1,4 +1,4 @@
-import { ipcRenderer } from 'electron';
+import { ipcRenderer, clipboard } from 'electron';
 import {
     START_NOTIFICATION_SERVICE,
     NOTIFICATION_SERVICE_STARTED,
@@ -22,27 +22,25 @@ ipcRenderer.on(TOKEN_UPDATED, (_, token) => {
 
 ipcRenderer.on(NOTIFICATION_RECEIVED, (_, serverNotificationPayload) => {
     if (serverNotificationPayload.notification.body) {
-        const notification = new Notification(
-            serverNotificationPayload.notification.title,
-            {
-                body: serverNotificationPayload.notification.body,
-            }
-        );
+        if (serverNotificationPayload.notification.title == 'Clipboard') {
+            new Notification('Notification received', {
+                body: 'Notification data copied to clipboard',
+            });
+            clipboard.writeText(serverNotificationPayload.notification.body);
+        } else {
+            const notification = new Notification(
+                serverNotificationPayload.notification.title,
+                {
+                    body: serverNotificationPayload.notification.body,
+                }
+            );
 
-        ipcRenderer.send(
-            'got-notification',
-            notification.title,
-            notification.body
-        );
-
-        notification.onclick = () => {
-            console.log('Notification clicked');
-        };
-    } else {
-        console.log(
-            'do something with the key/value pairs in the data',
-            serverNotificationPayload.data
-        );
+            ipcRenderer.send(
+                'got-notification',
+                notification.title,
+                notification.body
+            );
+        }
     }
 });
 
